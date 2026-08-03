@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FAFAF8;
+    color: #1C1C1A;
+  }
+
+  /* Citation tag — the one signature idiom, used inline anywhere a fact,
+     issue, or statement traces back to a source page or document. */
+  .citation {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: #8C6F4E;
+    white-space: nowrap;
+  }
+
+  .case-id {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: #4A4A46;
+  }
+}
