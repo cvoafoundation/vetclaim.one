@@ -21,6 +21,14 @@ export default async function VeteranHome() {
         .maybeSingle()
     : { data: null };
 
+  const { data: tasks } = userData.user
+    ? await supabase
+        .from("development_tasks")
+        .select("id, title, instructions, status")
+        .eq("assigned_to", userData.user.id)
+        .order("created_at", { ascending: false })
+    : { data: null };
+
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-lg mx-auto">
@@ -80,6 +88,29 @@ export default async function VeteranHome() {
                 </li>
               ))}
             </ol>
+
+            {tasks && tasks.length > 0 && (
+              <>
+                <p className="text-sm text-muted mb-3 mt-8">
+                  Your office has asked for a few more things:
+                </p>
+                <div className="border border-hairline divide-y divide-hairline">
+                  {tasks.map((t) => (
+                    <div key={t.id} className="px-4 py-3">
+                      <p className="text-sm">{t.title}</p>
+                      {t.instructions && (
+                        <p className="text-xs text-muted mt-1">
+                          {t.instructions}
+                        </p>
+                      )}
+                      <span className="text-xs text-accent din uppercase tracking-wide mt-2 inline-block">
+                        {t.status.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

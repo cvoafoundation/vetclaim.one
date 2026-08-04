@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function StateAdminDashboard() {
@@ -63,9 +64,14 @@ export default async function StateAdminDashboard() {
           <table className="w-full text-sm">
             <tbody>
               {Object.entries(byStage).map(([stage, count]) => (
-                <tr key={stage} className="border-b border-hairline">
-                  <td className="py-2 text-accent din uppercase tracking-wide text-xs">
-                    {stage.replaceAll("_", " ")}
+                <tr key={stage} className="border-b border-hairline hover:bg-accent-light">
+                  <td className="py-2">
+                    <Link
+                      href={`/state/stage/${stage}`}
+                      className="text-accent din uppercase tracking-wide text-xs block"
+                    >
+                      {stage.replaceAll("_", " ")}
+                    </Link>
                   </td>
                   <td className="py-2 text-right w-16">{count}</td>
                 </tr>

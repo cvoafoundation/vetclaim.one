@@ -241,12 +241,38 @@ $$ language plpgsql security definer;
 
 create trigger audit_claim_issues after insert or update or delete on claim_issues
   for each row execute function log_audit();
-create trigger audit_evidence_items after insert or update or delete on evidence_items
-  for each row execute function log_audit();
 create trigger audit_stage_history after insert on matter_stage_history
   for each row execute function log_audit();
 create trigger audit_development_tasks after insert or update or delete on development_tasks
   for each row execute function log_audit();
+
+-- evidence_items has no matter_id column of its own — it hangs off
+-- claim_issues, which is where matter_id actually lives — so it needs
+-- its own trigger function that looks the matter_id up via issue_id.
+create or replace function log_audit_evidence() returns trigger as $$
+declare
+  v_matter_id uuid;
+begin
+  select matter_id into v_matter_id
+  from claim_issues
+  where id = coalesce(new.issue_id, old.issue_id);
+
+  insert into audit_log (matter_id, actor_id, action, target_table, target_id, before, after)
+  values (
+    v_matter_id,
+    auth.uid(),
+    tg_op,
+    tg_table_name,
+    coalesce(new.id, old.id),
+    case when tg_op != 'INSERT' then to_jsonb(old) else null end,
+    case when tg_op != 'DELETE' then to_jsonb(new) else null end
+  );
+  return coalesce(new, old);
+end;
+$$ language plpgsql security definer;
+
+create trigger audit_evidence_items after insert or update or delete on evidence_items
+  for each row execute function log_audit_evidence();
 
 -- =========================================================================
 -- ROW-LEVEL SECURITY
