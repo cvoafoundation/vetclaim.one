@@ -72,11 +72,13 @@ export default async function RepDashboard() {
                   className="border-b border-hairline hover:bg-accent-light cursor-pointer"
                 >
                   <td className="py-3">
-                    <span className="case-id">
+                    <Link href={`/rep/matters/${m.id}`} className="case-id hover:text-accent">
                       CASE-{m.id.slice(0, 6).toUpperCase()}
-                    </span>
+                    </Link>
                   </td>
-                  <td className="py-3">{m.display_name}</td>
+                  <td className="py-3">
+                    <Link href={`/rep/matters/${m.id}`}>{m.display_name}</Link>
+                  </td>
                   <td className="py-3">
                     <span className="border border-hairline px-2 py-0.5 text-[11px] text-accent din uppercase tracking-wide">
                       {STAGE_LABELS[m.stage] ?? m.stage}
