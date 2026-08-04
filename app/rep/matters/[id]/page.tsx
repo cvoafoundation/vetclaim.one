@@ -32,17 +32,32 @@ export default async function MatterDetail({
 }) {
   const supabase = createClient();
 
-  const { data: matter } = await supabase
-    .from("veteran_matters")
-    .select("id, display_name, stage")
-    .eq("id", params.id)
-    .single();
-
-  const { data: issues } = await supabase
-    .from("claim_issues")
-    .select("id, condition_name, category, disposition, system_confidence")
-    .eq("matter_id", params.id)
-    .order("created_at", { ascending: true });
+  const [
+    { data: matter },
+    { data: issues },
+    { data: periods },
+    { data: deploys },
+    { data: conditions },
+    { data: ratings },
+    { data: denials },
+    { data: providers },
+  ] = await Promise.all([
+    supabase.from("veteran_matters").select("id, display_name, stage").eq("id", params.id).single(),
+    supabase
+      .from("claim_issues")
+      .select("id, condition_name, category, disposition, system_confidence")
+      .eq("matter_id", params.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("service_periods")
+      .select("branch, entry_date, discharge_date, discharge_type, occupational_specialty")
+      .eq("matter_id", params.id),
+    supabase.from("deployments").select("location, start_date, end_date, suspected_exposures").eq("matter_id", params.id),
+    supabase.from("conditions").select("condition_name, symptoms, onset_date, still_experiencing").eq("matter_id", params.id),
+    supabase.from("existing_ratings").select("condition_name, percentage, effective_date").eq("matter_id", params.id),
+    supabase.from("prior_denials").select("condition_name, decision_date, reason").eq("matter_id", params.id),
+    supabase.from("providers").select("provider_name, provider_type, location").eq("matter_id", params.id),
+  ]);
 
   if (!matter) {
     return (
@@ -74,6 +89,121 @@ export default async function MatterDetail({
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
+        <p className="text-xs text-muted din uppercase tracking-wide mb-3">
+          intake overview
+        </p>
+        <div className="grid grid-cols-2 gap-3 mb-10">
+          <div className="border border-hairline p-3">
+            <p className="text-[11px] text-muted din uppercase tracking-wide mb-1.5">
+              service history
+            </p>
+            {!periods || periods.length === 0 ? (
+              <p className="text-xs text-muted">Not yet provided.</p>
+            ) : (
+              <ul className="text-sm space-y-0.5">
+                {periods.map((p, i) => (
+                  <li key={i}>
+                    {p.branch} ({p.entry_date} &ndash; {p.discharge_date ?? "present"})
+                    {p.occupational_specialty ? ` \u2014 ${p.occupational_specialty}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="border border-hairline p-3">
+            <p className="text-[11px] text-muted din uppercase tracking-wide mb-1.5">
+              deployments
+            </p>
+            {!deploys || deploys.length === 0 ? (
+              <p className="text-xs text-muted">Not yet provided.</p>
+            ) : (
+              <ul className="text-sm space-y-0.5">
+                {deploys.map((d, i) => (
+                  <li key={i}>
+                    {d.location} ({d.start_date ?? "?"} &ndash; {d.end_date ?? "?"})
+                    {d.suspected_exposures && d.suspected_exposures.length > 0
+                      ? ` \u2014 ${d.suspected_exposures.join(", ")}`
+                      : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="border border-hairline p-3">
+            <p className="text-[11px] text-muted din uppercase tracking-wide mb-1.5">
+              current conditions
+            </p>
+            {!conditions || conditions.length === 0 ? (
+              <p className="text-xs text-muted">Not yet provided.</p>
+            ) : (
+              <ul className="text-sm space-y-0.5">
+                {conditions.map((c, i) => (
+                  <li key={i}>
+                    {c.condition_name}
+                    {c.onset_date ? ` (since ${c.onset_date})` : ""}
+                    {!c.still_experiencing ? " \u2014 resolved" : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="border border-hairline p-3">
+            <p className="text-[11px] text-muted din uppercase tracking-wide mb-1.5">
+              existing ratings
+            </p>
+            {!ratings || ratings.length === 0 ? (
+              <p className="text-xs text-muted">None on record.</p>
+            ) : (
+              <ul className="text-sm space-y-0.5">
+                {ratings.map((r, i) => (
+                  <li key={i}>
+                    {r.condition_name} &mdash; {r.percentage ?? "?"}%
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="border border-hairline p-3">
+            <p className="text-[11px] text-muted din uppercase tracking-wide mb-1.5">
+              prior denials
+            </p>
+            {!denials || denials.length === 0 ? (
+              <p className="text-xs text-muted">None on record.</p>
+            ) : (
+              <ul className="text-sm space-y-0.5">
+                {denials.map((d, i) => (
+                  <li key={i} className="text-status-missing">
+                    {d.condition_name}
+                    {d.decision_date ? ` (${d.decision_date})` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="border border-hairline p-3">
+            <p className="text-[11px] text-muted din uppercase tracking-wide mb-1.5">
+              providers
+            </p>
+            {!providers || providers.length === 0 ? (
+              <p className="text-xs text-muted">Not yet provided.</p>
+            ) : (
+              <ul className="text-sm space-y-0.5">
+                {providers.map((p, i) => (
+                  <li key={i}>
+                    {p.provider_name}
+                    {p.provider_type ? ` \u2014 ${p.provider_type}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
         <p className="text-xs text-muted din uppercase tracking-wide mb-3">
           potential issues &mdash; {issues?.length ?? 0}
         </p>

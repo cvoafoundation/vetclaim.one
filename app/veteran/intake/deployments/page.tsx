@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 async function saveDeployment(formData: FormData) {
@@ -29,21 +30,58 @@ async function saveDeployment(formData: FormData) {
     suspected_exposures: exposures,
   });
 
-  redirect("/veteran/intake/conditions");
+  redirect("/veteran/intake/deployments");
 }
 
-export default function DeploymentsStep() {
+export default async function DeploymentsStep() {
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  const { data: matter } = userData.user
+    ? await supabase
+        .from("veteran_matters")
+        .select("id")
+        .eq("veteran_user_id", userData.user.id)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: deploys } = matter
+    ? await supabase
+        .from("deployments")
+        .select("id, location, start_date, end_date, suspected_exposures")
+        .eq("matter_id", matter.id)
+        .order("start_date", { ascending: true })
+    : { data: null };
+
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-lg mx-auto">
         <p className="text-xs text-muted mb-1 din uppercase tracking-wide">step 2 of 6</p>
         <h1 className="din text-3xl mb-2">Deployments and exposures</h1>
-        <p className="text-muted text-sm mb-8">
+        <p className="text-muted text-sm mb-6">
           Add each place you deployed to. If you're not sure of exact dates,
-          your best estimate is fine.
+          your best estimate is fine. If you never deployed, just continue.
         </p>
 
-        <form action={saveDeployment} className="space-y-4">
+        {deploys && deploys.length > 0 && (
+          <div className="border border-hairline divide-y divide-hairline mb-6">
+            {deploys.map((d) => (
+              <div key={d.id} className="px-4 py-3 text-sm">
+                <p className="din uppercase tracking-wide text-xs text-accent mb-1">
+                  {d.location}
+                </p>
+                <p className="text-muted text-xs">
+                  {d.start_date ?? "?"} &mdash; {d.end_date ?? "?"}
+                  {d.suspected_exposures && d.suspected_exposures.length > 0
+                    ? ` \u2022 ${d.suspected_exposures.join(", ")}`
+                    : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form action={saveDeployment} className="space-y-4 border border-hairline p-4">
           <div>
             <label className="block text-sm text-muted mb-1" htmlFor="location">
               Location
@@ -99,11 +137,18 @@ export default function DeploymentsStep() {
 
           <button
             type="submit"
-            className="w-full bg-ink text-paper py-2.5 text-sm mt-6 din uppercase tracking-wide"
+            className="w-full border border-ink py-2 text-sm din uppercase tracking-wide"
           >
-            Continue
+            Add this deployment
           </button>
         </form>
+
+        <Link
+          href="/veteran/intake/conditions"
+          className="block w-full text-center bg-ink text-paper py-2.5 text-sm mt-4 din uppercase tracking-wide"
+        >
+          Continue
+        </Link>
       </div>
     </main>
   );

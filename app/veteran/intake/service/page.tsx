@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 async function saveServicePeriod(formData: FormData) {
@@ -40,21 +41,56 @@ async function saveServicePeriod(formData: FormData) {
     });
   }
 
-  redirect("/veteran/intake/deployments");
+  redirect("/veteran/intake/service");
 }
 
-export default function ServiceHistoryStep() {
+export default async function ServiceHistoryStep() {
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+
+  const { data: matter } = userData.user
+    ? await supabase
+        .from("veteran_matters")
+        .select("id")
+        .eq("veteran_user_id", userData.user.id)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: periods } = matter
+    ? await supabase
+        .from("service_periods")
+        .select("id, branch, entry_date, discharge_date, discharge_type, occupational_specialty")
+        .eq("matter_id", matter.id)
+        .order("entry_date", { ascending: true })
+    : { data: null };
+
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-lg mx-auto">
         <p className="text-xs text-muted mb-1 din uppercase tracking-wide">step 1 of 6</p>
         <h1 className="din text-3xl mb-2">Your service history</h1>
-        <p className="text-muted text-sm mb-8">
-          Tell us about each period you served. You can add more than one
-          if you served more than once.
+        <p className="text-muted text-sm mb-6">
+          Add each period you served. You can add more than one if you
+          served more than once.
         </p>
 
-        <form action={saveServicePeriod} className="space-y-4">
+        {periods && periods.length > 0 && (
+          <div className="border border-hairline divide-y divide-hairline mb-6">
+            {periods.map((p) => (
+              <div key={p.id} className="px-4 py-3 text-sm">
+                <p className="din uppercase tracking-wide text-xs text-accent mb-1">
+                  {p.branch}
+                </p>
+                <p className="text-muted text-xs">
+                  {p.entry_date} &mdash; {p.discharge_date ?? "present"}
+                  {p.occupational_specialty ? ` \u2022 ${p.occupational_specialty}` : ""}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form action={saveServicePeriod} className="space-y-4 border border-hairline p-4">
           <div>
             <label className="block text-sm text-muted mb-1" htmlFor="branch">
               Branch of service
@@ -136,11 +172,18 @@ export default function ServiceHistoryStep() {
 
           <button
             type="submit"
-            className="w-full bg-ink text-paper py-2.5 text-sm mt-6 din uppercase tracking-wide"
+            className="w-full border border-ink py-2 text-sm din uppercase tracking-wide"
           >
-            Continue
+            Add this period
           </button>
         </form>
+
+        <Link
+          href="/veteran/intake/deployments"
+          className="block w-full text-center bg-ink text-paper py-2.5 text-sm mt-4 din uppercase tracking-wide"
+        >
+          Continue
+        </Link>
       </div>
     </main>
   );

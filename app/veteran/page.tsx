@@ -1,12 +1,13 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
-const STEP_LABELS = [
-  "Service history",
-  "Deployments and exposures",
-  "Current conditions",
-  "Existing VA ratings",
-  "Previous claims and denials",
-  "Medical providers",
+const STEPS = [
+  { label: "Service history", table: "service_periods", href: "/veteran/intake/service" },
+  { label: "Deployments and exposures", table: "deployments", href: "/veteran/intake/deployments" },
+  { label: "Current conditions", table: "conditions", href: "/veteran/intake/conditions" },
+  { label: "Existing VA ratings", table: "existing_ratings", href: "/veteran/intake/ratings" },
+  { label: "Previous claims and denials", table: "prior_denials", href: "/veteran/intake/denials" },
+  { label: "Medical providers", table: "providers", href: "/veteran/intake/providers" },
 ];
 
 export default async function VeteranHome() {
@@ -27,6 +28,23 @@ export default async function VeteranHome() {
           .order("created_at", { ascending: false }),
       ])
     : [{ data: null }, { data: null }];
+
+  // Real progress, not a hardcoded guess — one count query per step
+  // table, run together rather than one at a time.
+  const stepCounts = matter
+    ? await Promise.all(
+        STEPS.map((s) =>
+          supabase
+            .from(s.table)
+            .select("id", { count: "exact", head: true })
+            .eq("matter_id", matter.id)
+        )
+      )
+    : [];
+
+  const intakeCertified = matter
+    ? !["intake_invited", "intake_in_progress"].includes(matter.stage)
+    : false;
 
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
@@ -66,27 +84,48 @@ export default async function VeteranHome() {
               Your intake, step by step:
             </p>
             <ol className="border border-hairline divide-y divide-hairline">
-              {STEP_LABELS.map((label, i) => (
-                <li
-                  key={label}
-                  className="flex items-center justify-between px-4 py-3 text-sm"
-                >
-                  <span>
-                    <span className="text-muted mr-2">{i + 1}.</span>
-                    {label}
-                  </span>
-                  {i === 0 ? (
-                    <span className="text-xs text-accent din uppercase tracking-wide">
-                      in progress
+              {STEPS.map((step, i) => {
+                const count = stepCounts[i]?.count ?? 0;
+                const status = intakeCertified
+                  ? "complete"
+                  : count > 0
+                  ? "in progress"
+                  : "not started";
+                return (
+                  <li key={step.label} className="flex items-center justify-between px-4 py-3 text-sm">
+                    <Link href={step.href} className="hover:text-accent">
+                      <span className="text-muted mr-2">{i + 1}.</span>
+                      {step.label}
+                      {count > 0 && (
+                        <span className="text-muted text-xs ml-2">
+                          ({count})
+                        </span>
+                      )}
+                    </Link>
+                    <span
+                      className={`text-xs din uppercase tracking-wide ${
+                        status === "complete"
+                          ? "text-status-present"
+                          : status === "in progress"
+                          ? "text-accent"
+                          : "text-muted"
+                      }`}
+                    >
+                      {status}
                     </span>
-                  ) : (
-                    <span className="text-xs text-muted din uppercase tracking-wide">
-                      not started
-                    </span>
-                  )}
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ol>
+
+            {!intakeCertified && (
+              <Link
+                href="/veteran/intake/review"
+                className="block w-full text-center border border-ink py-2.5 text-sm mt-4 din uppercase tracking-wide"
+              >
+                Review and certify when ready
+              </Link>
+            )}
 
             {tasks && tasks.length > 0 && (
               <>
