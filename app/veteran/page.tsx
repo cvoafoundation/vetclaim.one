@@ -13,21 +13,20 @@ export default async function VeteranHome() {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
 
-  const { data: matter } = userData.user
-    ? await supabase
-        .from("veteran_matters")
-        .select("id, display_name, stage")
-        .eq("veteran_user_id", userData.user.id)
-        .maybeSingle()
-    : { data: null };
-
-  const { data: tasks } = userData.user
-    ? await supabase
-        .from("development_tasks")
-        .select("id, title, instructions, status")
-        .eq("assigned_to", userData.user.id)
-        .order("created_at", { ascending: false })
-    : { data: null };
+  const [{ data: matter }, { data: tasks }] = userData.user
+    ? await Promise.all([
+        supabase
+          .from("veteran_matters")
+          .select("id, display_name, stage")
+          .eq("veteran_user_id", userData.user.id)
+          .maybeSingle(),
+        supabase
+          .from("development_tasks")
+          .select("id, title, instructions, status")
+          .eq("assigned_to", userData.user.id)
+          .order("created_at", { ascending: false }),
+      ])
+    : [{ data: null }, { data: null }];
 
   return (
     <main className="min-h-screen bg-paper px-6 py-10">

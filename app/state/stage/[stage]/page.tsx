@@ -8,14 +8,13 @@ export default async function StageDrilldown({
 }) {
   const supabase = createClient();
 
-  const { data: matters } = await supabase
-    .from("veteran_matters")
-    .select("organization_id")
-    .eq("stage", params.stage);
-
-  const { data: orgs } = await supabase
-    .from("organizations")
-    .select("id, name");
+  const [{ data: matters }, { data: orgs }] = await Promise.all([
+    supabase
+      .from("veteran_matters")
+      .select("organization_id")
+      .eq("stage", params.stage),
+    supabase.from("organizations").select("id, name"),
+  ]);
 
   const orgNames = new Map((orgs ?? []).map((o) => [o.id, o.name]));
 

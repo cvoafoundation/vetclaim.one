@@ -131,28 +131,25 @@ export default async function IssueDetail({
 }) {
   const supabase = createClient();
 
-  const { data: issue } = await supabase
-    .from("claim_issues")
-    .select("*")
-    .eq("id", params.issueId)
-    .single();
-
-  const { data: evidence } = await supabase
-    .from("evidence_items")
-    .select("*")
-    .eq("issue_id", params.issueId);
-
-  const { data: matter } = await supabase
-    .from("veteran_matters")
-    .select("id, veteran_user_id, display_name")
-    .eq("id", params.id)
-    .single();
-
-  const { data: existingTasks } = await supabase
-    .from("development_tasks")
-    .select("id, title, status, created_at")
-    .eq("issue_id", params.issueId)
-    .order("created_at", { ascending: false });
+  const [
+    { data: issue },
+    { data: evidence },
+    { data: matter },
+    { data: existingTasks },
+  ] = await Promise.all([
+    supabase.from("claim_issues").select("*").eq("id", params.issueId).single(),
+    supabase.from("evidence_items").select("*").eq("issue_id", params.issueId),
+    supabase
+      .from("veteran_matters")
+      .select("id, veteran_user_id, display_name")
+      .eq("id", params.id)
+      .single(),
+    supabase
+      .from("development_tasks")
+      .select("id, title, status, created_at")
+      .eq("issue_id", params.issueId)
+      .order("created_at", { ascending: false }),
+  ]);
 
   if (!issue) {
     return (

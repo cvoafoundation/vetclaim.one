@@ -4,13 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 export default async function StateAdminDashboard() {
   const supabase = createClient();
 
-  const { data: matters } = await supabase
-    .from("veteran_matters")
-    .select("stage, organization_id");
-
-  const { data: orgs } = await supabase
-    .from("organizations")
-    .select("id, org_type, name");
+  const [{ data: matters }, { data: orgs }] = await Promise.all([
+    supabase.from("veteran_matters").select("stage, organization_id"),
+    supabase.from("organizations").select("id, org_type, name"),
+  ]);
 
   const totalMatters = matters?.length ?? 0;
   const totalOrgs = orgs?.length ?? 0;
