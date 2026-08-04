@@ -32,10 +32,10 @@ export default async function RepDashboard() {
     <main className="min-h-screen bg-paper">
       <header className="border-b border-hairline">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-mono text-sm">VETCLAIM.ONE</span>
+          <span className="din text-sm uppercase tracking-wide">VETCLAIM.ONE</span>
           <Link
             href="/rep/matters/new"
-            className="bg-ink text-paper px-4 py-2 text-sm"
+            className="bg-ink text-paper px-4 py-2 text-sm din uppercase tracking-wide"
           >
             Create matter
           </Link>
@@ -43,7 +43,7 @@ export default async function RepDashboard() {
       </header>
 
       <div className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="font-serif text-2xl mb-6">Your caseload</h1>
+        <h1 className="din text-3xl mb-6">Your caseload</h1>
 
         {!matters || matters.length === 0 ? (
           <div className="border border-hairline p-10 text-center">
@@ -59,10 +59,10 @@ export default async function RepDashboard() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-hairline text-left text-muted">
-                <th className="py-2 font-normal">Case</th>
-                <th className="py-2 font-normal">Veteran</th>
-                <th className="py-2 font-normal">Stage</th>
-                <th className="py-2 font-normal">Created</th>
+                <th className="py-2 font-normal din uppercase tracking-wide text-xs">Case</th>
+                <th className="py-2 font-normal din uppercase tracking-wide text-xs">Veteran</th>
+                <th className="py-2 font-normal din uppercase tracking-wide text-xs">Stage</th>
+                <th className="py-2 font-normal din uppercase tracking-wide text-xs">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -76,13 +76,13 @@ export default async function RepDashboard() {
                       CASE-{m.id.slice(0, 6).toUpperCase()}
                     </span>
                   </td>
-                  <td className="py-3 font-serif">{m.display_name}</td>
+                  <td className="py-3">{m.display_name}</td>
                   <td className="py-3">
-                    <span className="border border-hairline px-2 py-0.5 text-xs font-mono text-accent">
+                    <span className="border border-hairline px-2 py-0.5 text-[11px] text-accent din uppercase tracking-wide">
                       {STAGE_LABELS[m.stage] ?? m.stage}
                     </span>
                   </td>
-                  <td className="py-3 text-muted font-mono text-xs">
+                  <td className="py-3 text-muted text-xs">
                     {new Date(m.created_at).toLocaleDateString()}
                   </td>
                 </tr>

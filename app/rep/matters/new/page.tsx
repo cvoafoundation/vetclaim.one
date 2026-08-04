@@ -62,8 +62,8 @@ export default function NewMatterPage() {
         action={createMatter}
         className="w-full max-w-md border border-hairline p-8"
       >
-        <p className="font-mono text-xs text-muted mb-1">VETCLAIM.ONE</p>
-        <h1 className="font-serif text-2xl mb-6">Create matter</h1>
+        <p className="text-xs text-muted mb-1 din uppercase tracking-wide">VETCLAIM.ONE</p>
+        <h1 className="din text-3xl mb-6">Create matter</h1>
 
         <label className="block text-sm text-muted mb-1" htmlFor="display_name">
           Veteran name
@@ -95,7 +95,7 @@ export default function NewMatterPage() {
 
         <button
           type="submit"
-          className="w-full bg-ink text-paper py-2.5 text-sm"
+          className="w-full bg-ink text-paper py-2.5 text-sm din uppercase tracking-wide"
         >
           Create matter and send invitation
         </button>

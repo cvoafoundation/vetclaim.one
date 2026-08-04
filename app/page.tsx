@@ -5,7 +5,7 @@ export default function LandingPage() {
     <main className="min-h-screen bg-paper text-ink">
       <header className="border-b border-hairline">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <span className="font-mono text-sm tracking-wide">VETCLAIM.ONE</span>
+          <span className="din text-sm tracking-wide uppercase">VETCLAIM.ONE</span>
           <nav className="flex items-center gap-6 text-sm">
             <Link href="/security" className="text-muted hover:text-ink">
               Security &amp; trust
@@ -15,7 +15,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/sign-in"
-              className="border border-ink px-3 py-1.5 text-sm"
+              className="border border-ink px-3 py-1.5 text-sm din uppercase tracking-wide"
             >
               Sign in
             </Link>
@@ -24,10 +24,10 @@ export default function LandingPage() {
       </header>
 
       <section className="max-w-3xl mx-auto px-6 pt-24 pb-16">
-        <p className="font-mono text-xs text-accent mb-4">
+        <p className="text-xs text-accent mb-4 din uppercase tracking-wide">
           for accredited representatives
         </p>
-        <h1 className="font-serif text-4xl leading-tight mb-6">
+        <h1 className="din text-5xl leading-tight mb-6">
           Every claim, organized and sourced before it reaches VetraSpec.
         </h1>
         <p className="text-muted text-lg leading-relaxed mb-10 max-w-xl">
@@ -39,13 +39,13 @@ export default function LandingPage() {
         <div className="flex gap-4">
           <Link
             href="/demo"
-            className="bg-ink text-paper px-5 py-2.5 text-sm"
+            className="bg-ink text-paper px-5 py-2.5 text-sm din uppercase tracking-wide"
           >
             Request a demonstration
           </Link>
           <Link
             href="/sign-in"
-            className="border border-hairline px-5 py-2.5 text-sm text-muted"
+            className="border border-hairline px-5 py-2.5 text-sm text-muted din uppercase tracking-wide"
           >
             Sign in
           </Link>

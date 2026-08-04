@@ -41,8 +41,8 @@ export default function SignInPage() {
         onSubmit={handleSignIn}
         className="w-full max-w-sm border border-hairline p-8"
       >
-        <p className="font-mono text-xs text-muted mb-1">VETCLAIM.ONE</p>
-        <h1 className="font-serif text-2xl mb-6">Sign in</h1>
+        <p className="text-xs text-muted mb-1 din uppercase tracking-wide">VETCLAIM.ONE</p>
+        <h1 className="din text-3xl mb-6">Sign in</h1>
 
         <label className="block text-sm text-muted mb-1" htmlFor="email">
           Email
@@ -75,7 +75,7 @@ export default function SignInPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-ink text-paper py-2.5 text-sm"
+          className="w-full bg-ink text-paper py-2.5 text-sm din uppercase tracking-wide"
         >
           {loading ? "Signing in\u2026" : "Sign in"}
         </button>

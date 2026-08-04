@@ -25,18 +25,26 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ["Iowan Old Style", "Georgia", "serif"],
-        sans: [
-          "-apple-system",
-          "Inter",
-          "Helvetica Neue",
-          "Arial",
+        // Headings, nav, labels, buttons — condensed industrial grotesque.
+        // macOS ships DIN Alternate/Condensed natively; Archivo Narrow is
+        // the closest open fallback so it still reads right off-Mac.
+        din: [
+          "DIN Alternate",
+          "DIN Condensed",
+          "Archivo Narrow",
+          "Arial Narrow",
           "sans-serif",
         ],
-        mono: ["SF Mono", "Menlo", "Consolas", "monospace"],
+        // Body copy, form fields, data, every citation and case ID —
+        // a real typewriter face, not a "mono accent." This is what
+        // pulls the whole thing away from looking like a generic app.
+        mono: ["Courier New", "Courier Prime", "Courier", "monospace"],
+      },
+      letterSpacing: {
+        wide: "0.06em",
       },
       borderRadius: {
-        DEFAULT: "2px", // hairline, document-like — not app-y rounded corners
+        DEFAULT: "0px", // hard corners — case file, not app chrome
       },
     },
   },

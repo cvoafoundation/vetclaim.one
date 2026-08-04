@@ -6,21 +6,38 @@
   body {
     background-color: #FAFAF8;
     color: #1C1C1A;
+    font-family: "Courier New", "Courier Prime", Courier, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, .din {
+    font-family: "DIN Alternate", "DIN Condensed", "Archivo Narrow",
+      "Arial Narrow", sans-serif;
+    letter-spacing: 0.01em;
   }
 
   /* Citation tag — the one signature idiom, used inline anywhere a fact,
      issue, or statement traces back to a source page or document. */
   .citation {
-    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-family: "Courier New", Courier, monospace;
     font-size: 11px;
     color: #8C6F4E;
     white-space: nowrap;
   }
 
+  /* Case IDs and stage labels read as stenciled tags, not typed text —
+     condensed, uppercase, tracked out. */
   .case-id {
-    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-family: "DIN Alternate", "DIN Condensed", "Archivo Narrow",
+      sans-serif;
     font-size: 11px;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: #4A4A46;
+  }
+
+  input, select, textarea, button {
+    font-family: "Courier New", Courier, monospace;
   }
 }

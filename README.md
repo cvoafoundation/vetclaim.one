@@ -3,7 +3,7 @@
 Non-production. Synthetic demo data only.
 
 ## What's built
- 
+
 - Design tokens (`tailwind.config.ts`, `app/globals.css`) — paper/ink/warm-gray
   base, ochre accent, serif/sans/mono type roles, mono citation tags
 - Full Supabase schema + RLS policies for the MVP scope (`supabase/schema.sql`)
