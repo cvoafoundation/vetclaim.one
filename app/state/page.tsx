@@ -23,10 +23,20 @@ export default async function StateAdminDashboard() {
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-4xl mx-auto">
-        <p className="text-xs text-muted mb-1 din uppercase tracking-wide">
-          state administration
-        </p>
-        <h1 className="din text-3xl mb-2">Statewide overview</h1>
+        <div className="flex items-start justify-between gap-6 mb-2">
+          <div>
+            <p className="text-xs text-muted mb-1 din uppercase tracking-wide">
+              state administration
+            </p>
+            <h1 className="din text-3xl">Statewide overview</h1>
+          </div>
+          <a
+            href="/state/export"
+            className="border border-hairline text-muted px-3 py-1.5 text-xs din uppercase tracking-wide whitespace-nowrap"
+          >
+            export monthly report (csv)
+          </a>
+        </div>
         <p className="text-sm text-muted mb-8 max-w-xl">
           Stub view for the MVP slice &mdash; aggregate counts only. The
           real build serves this from rollup views with a separate, narrower

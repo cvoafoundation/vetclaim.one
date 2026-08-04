@@ -43,7 +43,15 @@ export default async function RepDashboard() {
       </header>
 
       <div className="max-w-5xl mx-auto px-6 py-10">
-        <h1 className="din text-3xl mb-6">Your caseload</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="din text-3xl">Your caseload</h1>
+          <a
+            href="/rep/export"
+            className="border border-hairline text-muted px-3 py-1.5 text-xs din uppercase tracking-wide"
+          >
+            export monthly report (csv)
+          </a>
+        </div>
 
         {!matters || matters.length === 0 ? (
           <div className="border border-hairline p-10 text-center">
@@ -63,13 +71,14 @@ export default async function RepDashboard() {
                 <th className="py-2 font-normal din uppercase tracking-wide text-xs">Veteran</th>
                 <th className="py-2 font-normal din uppercase tracking-wide text-xs">Stage</th>
                 <th className="py-2 font-normal din uppercase tracking-wide text-xs">Created</th>
+                <th className="py-2 font-normal"></th>
               </tr>
             </thead>
             <tbody>
               {matters.map((m) => (
                 <tr
                   key={m.id}
-                  className="border-b border-hairline hover:bg-accent-light cursor-pointer"
+                  className="border-b border-hairline hover:bg-accent-light"
                 >
                   <td className="py-3">
                     <Link href={`/rep/matters/${m.id}`} className="case-id hover:text-accent">
@@ -86,6 +95,14 @@ export default async function RepDashboard() {
                   </td>
                   <td className="py-3 text-muted text-xs">
                     {new Date(m.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="py-3 text-right">
+                    <Link
+                      href={`/rep/matters/${m.id}`}
+                      className="border border-ink px-3 py-1 text-xs din uppercase tracking-wide"
+                    >
+                      Open case
+                    </Link>
                   </td>
                 </tr>
               ))}

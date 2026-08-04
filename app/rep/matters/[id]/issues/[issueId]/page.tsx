@@ -311,8 +311,13 @@ export default async function IssueDetail({
         )}
 
         <div className="border-t border-hairline pt-6">
-          <p className="text-xs text-muted din uppercase tracking-wide mb-3">
+          <p className="text-xs text-muted din uppercase tracking-wide mb-1">
             representative disposition
+          </p>
+          <p className="text-sm text-muted mb-4 max-w-lg">
+            This is your professional call on whether this issue moves
+            forward. Nothing here submits anything to VA &mdash; it only
+            decides whether this issue continues toward the final report.
           </p>
           <form action={disposeIssue} className="space-y-3">
             <input type="hidden" name="issue_id" value={issue.id} />
@@ -324,31 +329,47 @@ export default async function IssueDetail({
               className="w-full border border-hairline px-3 py-2 text-sm bg-white h-20"
             />
 
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                name="disposition"
-                value="accepted"
-                className="border border-ink px-4 py-2 text-sm din uppercase tracking-wide"
-              >
-                Accept
-              </button>
-              <button
-                type="submit"
-                name="disposition"
-                value="deferred"
-                className="border border-hairline text-muted px-4 py-2 text-sm din uppercase tracking-wide"
-              >
-                Defer
-              </button>
-              <button
-                type="submit"
-                name="disposition"
-                value="rejected"
-                className="border border-hairline text-status-missing px-4 py-2 text-sm din uppercase tracking-wide"
-              >
-                Reject
-              </button>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <button
+                  type="submit"
+                  name="disposition"
+                  value="accepted"
+                  className="w-full border border-ink px-4 py-2 text-sm din uppercase tracking-wide"
+                >
+                  Accept
+                </button>
+                <p className="text-xs text-muted mt-1.5">
+                  You agree this issue is worth pursuing as-is.
+                </p>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  name="disposition"
+                  value="deferred"
+                  className="w-full border border-hairline text-muted px-4 py-2 text-sm din uppercase tracking-wide"
+                >
+                  Defer
+                </button>
+                <p className="text-xs text-muted mt-1.5">
+                  Not ready to decide &mdash; revisit after more evidence
+                  comes in.
+                </p>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  name="disposition"
+                  value="rejected"
+                  className="w-full border border-hairline text-status-missing px-4 py-2 text-sm din uppercase tracking-wide"
+                >
+                  Reject
+                </button>
+                <p className="text-xs text-muted mt-1.5">
+                  This issue doesn't belong in this claim. Requires a reason.
+                </p>
+              </div>
             </div>
           </form>
         </div>
