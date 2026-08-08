@@ -135,18 +135,22 @@ async function generateAISummary(formData: FormData) {
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) redirect("/sign-in");
 
-  const [{ data: issue }, { data: evidence }, { data: rules }] =
-    await Promise.all([
-      supabase.from("claim_issues").select("*").eq("id", issueId).single(),
-      supabase.from("evidence_items").select("*").eq("issue_id", issueId),
-      supabase
-        .from("rules")
-        .select("rule_name, authority, citation, source_url, effective_date")
-        .eq("status", "active")
-        .ilike("rule_name", `%${(issue?.condition_name ?? "").split(" ")[0]}%`),
-    ]);
+  const { data: issue } = await supabase
+    .from("claim_issues")
+    .select("*")
+    .eq("id", issueId)
+    .single();
 
   if (!issue) redirect(`/rep/matters/${matterId}`);
+
+  const [{ data: evidence }, { data: rules }] = await Promise.all([
+    supabase.from("evidence_items").select("*").eq("issue_id", issueId),
+    supabase
+      .from("rules")
+      .select("rule_name, authority, citation, source_url, effective_date")
+      .eq("status", "active")
+      .ilike("rule_name", `%${issue.condition_name.split(" ")[0]}%`),
+  ]);
 
   // Strict grounding: the model only ever sees what's already in the
   // database. No web access, no general medical/legal knowledge is
