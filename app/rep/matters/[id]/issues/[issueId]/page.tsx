@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { draftWithAI } from "@/lib/ai/draft";
 
 const ELEMENT_LABELS: Record<string, string> = {
   current_diagnosis: "Current diagnosis",
@@ -176,32 +177,7 @@ ${(rules ?? [])
   .join("\n") || "No matching rule found in the system's rules table — do not cite any authority."}
 `.trim();
 
-  let summary = "AI summary generation is not configured yet (missing ANTHROPIC_API_KEY).";
-
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": process.env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-5",
-          max_tokens: 500,
-          system: systemPrompt,
-          messages: [{ role: "user", content: userPrompt }],
-        }),
-      });
-      const data = await response.json();
-      summary =
-        data?.content?.[0]?.text ??
-        "The AI service didn't return a usable response. Try again.";
-    } catch {
-      summary = "AI summary generation failed. Try again in a moment.";
-    }
-  }
+  const summary = await draftWithAI(systemPrompt, userPrompt);
 
   await supabase
     .from("claim_issues")

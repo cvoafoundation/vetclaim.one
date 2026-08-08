@@ -26,21 +26,53 @@ Non-production. Synthetic demo data only.
   one-click "request from veteran" task assignment, and accept/reject/defer
   with required reasons
 
-## AI summary — how it's grounded
+## AI summary — how it's grounded, and how to self-host it
 
-The "generate AI summary" button on each issue calls the Anthropic API
-directly from a server action (never from the browser, so the API key is
-never exposed). The prompt only includes the issue's own fields, its
-evidence rows, and any matching rows from the `rules` table — nothing else.
-It's explicitly instructed not to invent diagnoses, citations, causation,
-or an approval likelihood, and to say when something needed isn't in the
-record rather than filling the gap. The result is stored in its own
-columns on `claim_issues` (`ai_summary`, never blended into
-`claimed_theory` or `disposition_reason`) and always labeled unverified —
-generating one never changes a disposition.
+The "generate AI summary" button on each issue drafts a summary using
+`lib/ai/draft.ts`, which is deliberately provider-agnostic — set one
+environment variable (`AI_PROVIDER`) to switch between Anthropic's API and
+a self-hosted open-source model, with no app code changes either way.
 
-Requires an `ANTHROPIC_API_KEY` environment variable, set in Vercel and
-never referenced from any client component.
+The prompt itself only ever includes the issue's own fields, its evidence
+rows, and any matching rows from the `rules` table — nothing else. It's
+explicitly instructed not to invent diagnoses, citations, causation, or an
+approval likelihood, and to say when something needed isn't in the record
+rather than filling the gap. The result is stored in its own columns on
+`claim_issues` (`ai_summary`, never blended into `claimed_theory` or
+`disposition_reason`) and always labeled unverified — generating one never
+changes a disposition.
+
+### Option A — Anthropic API
+Set `AI_PROVIDER=anthropic` and `ANTHROPIC_API_KEY` in Vercel. Simplest to
+run, no infrastructure to maintain, but veteran case data leaves your
+infrastructure on every call.
+
+### Option B — self-hosted, on your own server (no data leaves your infrastructure)
+Set `AI_PROVIDER=self_hosted` and point it at a server you control, running
+[Ollama](https://ollama.com) (the simplest way to self-host an open model
+with an OpenAI-compatible API):
+
+1. Stand up a server with a GPU if you can get one (self-hosted models run
+   noticeably faster and better quality on a GPU; a CPU-only box works but
+   is slow). A modest cloud GPU instance (e.g. a single A10 or similar)
+   from any provider running Ubuntu is enough for a model this size.
+2. Install Ollama on it: `curl -fsSL https://ollama.com/install.sh | sh`
+3. Pull a model: `ollama pull llama3.1:8b`
+4. Ollama exposes an OpenAI-compatible endpoint automatically at
+   `http://<your-server-ip>:11434/v1` — no extra setup needed.
+5. In Vercel, set:
+   - `AI_PROVIDER=self_hosted`
+   - `SELF_HOSTED_AI_BASE_URL=http://<your-server-ip>:11434/v1`
+   - `SELF_HOSTED_AI_MODEL=llama3.1:8b`
+6. Lock the server down — put it behind a firewall that only allows
+   inbound connections from Vercel's IP ranges, or put it behind a VPN.
+   Don't leave port 11434 open to the whole internet; anyone who can reach
+   it can use your GPU and, depending on configuration, see what's sent.
+
+**Be aware of the real tradeoff:** an 8B open model is meaningfully weaker
+than Claude at following strict "don't invent anything" instructions. Spot
+check its outputs more carefully, especially early on, and treat "AI-
+drafted — unverified" as a label to take seriously here, not boilerplate.
 - Veteran: home page with real, dynamic intake progress (not hardcoded) and
   assigned tasks from the representative
 - State admin: aggregate dashboard with office-level drilldown and CSV
