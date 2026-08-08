@@ -21,8 +21,26 @@ Non-production. Synthetic demo data only.
   and moves the case to "records needed."
 - Representative: caseload dashboard (with CSV export), create matter, case
   detail with a compiled intake overview plus the issues list, issue detail
-  with evidence matrix, plain-language explanations, one-click "request from
-  veteran" task assignment, and accept/reject/defer with required reasons
+  with evidence matrix, plain-language explanations, an AI-drafted summary
+  (grounded only in evidence/citations already on record — see below),
+  one-click "request from veteran" task assignment, and accept/reject/defer
+  with required reasons
+
+## AI summary — how it's grounded
+
+The "generate AI summary" button on each issue calls the Anthropic API
+directly from a server action (never from the browser, so the API key is
+never exposed). The prompt only includes the issue's own fields, its
+evidence rows, and any matching rows from the `rules` table — nothing else.
+It's explicitly instructed not to invent diagnoses, citations, causation,
+or an approval likelihood, and to say when something needed isn't in the
+record rather than filling the gap. The result is stored in its own
+columns on `claim_issues` (`ai_summary`, never blended into
+`claimed_theory` or `disposition_reason`) and always labeled unverified —
+generating one never changes a disposition.
+
+Requires an `ANTHROPIC_API_KEY` environment variable, set in Vercel and
+never referenced from any client component.
 - Veteran: home page with real, dynamic intake progress (not hardcoded) and
   assigned tasks from the representative
 - State admin: aggregate dashboard with office-level drilldown and CSV

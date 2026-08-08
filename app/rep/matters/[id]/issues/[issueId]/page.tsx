@@ -124,6 +124,97 @@ async function requestFromVeteran(formData: FormData) {
   redirect(`/rep/matters/${matterId}/issues/${issueId}`);
 }
 
+async function generateAISummary(formData: FormData) {
+  "use server";
+
+  const issueId = formData.get("issue_id") as string;
+  const matterId = formData.get("matter_id") as string;
+
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) redirect("/sign-in");
+
+  const [{ data: issue }, { data: evidence }, { data: rules }] =
+    await Promise.all([
+      supabase.from("claim_issues").select("*").eq("id", issueId).single(),
+      supabase.from("evidence_items").select("*").eq("issue_id", issueId),
+      supabase
+        .from("rules")
+        .select("rule_name, authority, citation, source_url, effective_date")
+        .eq("status", "active")
+        .ilike("rule_name", `%${(issue?.condition_name ?? "").split(" ")[0]}%`),
+    ]);
+
+  if (!issue) redirect(`/rep/matters/${matterId}`);
+
+  // Strict grounding: the model only ever sees what's already in the
+  // database. No web access, no general medical/legal knowledge is
+  // invited in — if the record doesn't say it, the model is told to
+  // say it doesn't know, not to fill the gap.
+  const systemPrompt = `You are drafting a neutral, internal summary for an accredited Veterans Service Officer who is reviewing a potential VA disability claim issue. You may ONLY use the facts, evidence, and regulatory citations provided to you below. Do not invent diagnoses, medical causation, regulatory citations, effective dates, or any fact not explicitly given. If something needed to reach a conclusion is missing from what's provided, say so plainly instead of guessing or filling the gap. Never state or imply a probability that VA will approve this claim. Never state a final determination — this is a drafting aid for the representative's own review, not a legal or medical opinion. Keep it to two short paragraphs.`;
+
+  const userPrompt = `
+Issue: ${issue.condition_name}
+Category: ${issue.category}
+Claimed theory: ${issue.claimed_theory ?? "not specified"}
+Symptom onset date on record: ${issue.symptom_onset_date ?? "not specified"}
+Current severity on record: ${issue.current_severity ?? "not specified"}
+
+Evidence on record:
+${(evidence ?? [])
+  .map(
+    (e) =>
+      `- ${e.element.replaceAll("_", " ")}: ${e.status.replaceAll("_", " ")}${
+        e.narrative ? ` — ${e.narrative}` : ""
+      }`
+  )
+  .join("\n") || "None recorded."}
+
+Matched regulatory citations on record:
+${(rules ?? [])
+  .map((r) => `- ${r.rule_name} (${r.authority}, ${r.citation})`)
+  .join("\n") || "No matching rule found in the system's rules table — do not cite any authority."}
+`.trim();
+
+  let summary = "AI summary generation is not configured yet (missing ANTHROPIC_API_KEY).";
+
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-5",
+          max_tokens: 500,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+        }),
+      });
+      const data = await response.json();
+      summary =
+        data?.content?.[0]?.text ??
+        "The AI service didn't return a usable response. Try again.";
+    } catch {
+      summary = "AI summary generation failed. Try again in a moment.";
+    }
+  }
+
+  await supabase
+    .from("claim_issues")
+    .update({
+      ai_summary: summary,
+      ai_summary_generated_at: new Date().toISOString(),
+      ai_summary_generated_by: userData.user!.id,
+    })
+    .eq("id", issueId);
+
+  redirect(`/rep/matters/${matterId}/issues/${issueId}`);
+}
+
 export default async function IssueDetail({
   params,
 }: {
@@ -227,6 +318,40 @@ export default async function IssueDetail({
             ))}
           </div>
         )}
+
+        <div className="border-t border-hairline pt-6 mb-8">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs text-muted din uppercase tracking-wide">
+              ai-drafted summary &mdash; unverified
+            </p>
+            <form action={generateAISummary}>
+              <input type="hidden" name="issue_id" value={issue.id} />
+              <input type="hidden" name="matter_id" value={params.id} />
+              <button
+                type="submit"
+                className="border border-hairline px-3 py-1 text-xs din uppercase tracking-wide"
+              >
+                {issue.ai_summary ? "regenerate" : "generate ai summary"}
+              </button>
+            </form>
+          </div>
+          {issue.ai_summary ? (
+            <div className="bg-accent-light border border-hairline px-4 py-3">
+              <p className="text-sm whitespace-pre-line">{issue.ai_summary}</p>
+              <p className="text-[11px] text-muted mt-3">
+                Drafted from evidence and matched citations already in this
+                record — not a legal or medical opinion. Verify before
+                relying on it.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted">
+              Not generated yet. This drafts a neutral summary strictly from
+              the evidence and citations already on record — it won't
+              invent anything not already here.
+            </p>
+          )}
+        </div>
 
         {needsFollowUp.length > 0 && (
           <div className="border-t border-hairline pt-6 mb-8">

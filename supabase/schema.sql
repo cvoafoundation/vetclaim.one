@@ -193,6 +193,9 @@ create table claim_issues (
   disposed_by uuid references auth.users(id),
   disposed_at timestamptz,
   authority_version_id uuid,
+  ai_summary text,
+  ai_summary_generated_at timestamptz,
+  ai_summary_generated_by uuid references auth.users(id),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
