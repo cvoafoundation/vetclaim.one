@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import IntakeProgress from "@/components/IntakeProgress";
 
 async function saveDeployment(formData: FormData) {
   "use server";
@@ -33,6 +34,16 @@ async function saveDeployment(formData: FormData) {
   redirect("/veteran/intake/deployments");
 }
 
+async function deleteDeployment(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) redirect("/sign-in");
+
+  await supabase.from("deployments").delete().eq("id", formData.get("id") as string);
+  redirect("/veteran/intake/deployments");
+}
+
 export default async function DeploymentsStep() {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -56,7 +67,7 @@ export default async function DeploymentsStep() {
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-lg mx-auto">
-        <p className="text-xs text-muted mb-1 din uppercase tracking-wide">step 2 of 6</p>
+        <IntakeProgress step={2} />
         <h1 className="din text-3xl mb-2">Deployments and exposures</h1>
         <p className="text-muted text-sm mb-6">
           Add each place you deployed to. If you're not sure of exact dates,
@@ -66,16 +77,27 @@ export default async function DeploymentsStep() {
         {deploys && deploys.length > 0 && (
           <div className="border border-hairline divide-y divide-hairline mb-6">
             {deploys.map((d) => (
-              <div key={d.id} className="px-4 py-3 text-sm">
-                <p className="din uppercase tracking-wide text-xs text-accent mb-1">
-                  {d.location}
-                </p>
-                <p className="text-muted text-xs">
-                  {d.start_date ?? "?"} &mdash; {d.end_date ?? "?"}
-                  {d.suspected_exposures && d.suspected_exposures.length > 0
-                    ? ` \u2022 ${d.suspected_exposures.join(", ")}`
-                    : ""}
-                </p>
+              <div key={d.id} className="px-4 py-3 text-sm flex items-center justify-between gap-3">
+                <div>
+                  <p className="din uppercase tracking-wide text-xs text-accent mb-1">
+                    {d.location}
+                  </p>
+                  <p className="text-muted text-xs">
+                    {d.start_date ?? "?"} &mdash; {d.end_date ?? "?"}
+                    {d.suspected_exposures && d.suspected_exposures.length > 0
+                      ? ` \u2022 ${d.suspected_exposures.join(", ")}`
+                      : ""}
+                  </p>
+                </div>
+                <form action={deleteDeployment}>
+                  <input type="hidden" name="id" value={d.id} />
+                  <button
+                    type="submit"
+                    className="text-xs text-muted hover:text-status-missing din uppercase tracking-wide whitespace-nowrap"
+                  >
+                    remove
+                  </button>
+                </form>
               </div>
             ))}
           </div>
@@ -119,6 +141,7 @@ export default async function DeploymentsStep() {
               />
             </div>
           </div>
+          <p className="text-xs text-muted -mt-2">Best guess is fine on both dates.</p>
 
           <div>
             <label className="block text-sm text-muted mb-1" htmlFor="exposures">

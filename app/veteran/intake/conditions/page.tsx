@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import IntakeProgress from "@/components/IntakeProgress";
 
 async function saveCondition(formData: FormData) {
   "use server";
@@ -28,6 +29,16 @@ async function saveCondition(formData: FormData) {
   redirect("/veteran/intake/conditions");
 }
 
+async function deleteCondition(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) redirect("/sign-in");
+
+  await supabase.from("conditions").delete().eq("id", formData.get("id") as string);
+  redirect("/veteran/intake/conditions");
+}
+
 export default async function ConditionsStep() {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -51,7 +62,7 @@ export default async function ConditionsStep() {
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-lg mx-auto">
-        <p className="text-xs text-muted mb-1 din uppercase tracking-wide">step 3 of 6</p>
+        <IntakeProgress step={3} />
         <h1 className="din text-3xl mb-2">Current conditions</h1>
         <p className="text-muted text-sm mb-6">
           Add anything you're currently dealing with, whether or not you
@@ -61,15 +72,26 @@ export default async function ConditionsStep() {
         {conditions && conditions.length > 0 && (
           <div className="border border-hairline divide-y divide-hairline mb-6">
             {conditions.map((c) => (
-              <div key={c.id} className="px-4 py-3 text-sm">
-                <p className="din uppercase tracking-wide text-xs text-accent mb-1">
-                  {c.condition_name}
-                </p>
-                {c.symptoms && <p className="text-muted text-xs">{c.symptoms}</p>}
-                <p className="text-muted text-xs mt-1">
-                  {c.onset_date ? `Since ${c.onset_date}` : "Onset date not given"}
-                  {c.still_experiencing ? " \u2022 ongoing" : " \u2022 resolved"}
-                </p>
+              <div key={c.id} className="px-4 py-3 text-sm flex items-start justify-between gap-3">
+                <div>
+                  <p className="din uppercase tracking-wide text-xs text-accent mb-1">
+                    {c.condition_name}
+                  </p>
+                  {c.symptoms && <p className="text-muted text-xs">{c.symptoms}</p>}
+                  <p className="text-muted text-xs mt-1">
+                    {c.onset_date ? `Since ${c.onset_date}` : "Onset date not given"}
+                    {c.still_experiencing ? " \u2022 ongoing" : " \u2022 resolved"}
+                  </p>
+                </div>
+                <form action={deleteCondition}>
+                  <input type="hidden" name="id" value={c.id} />
+                  <button
+                    type="submit"
+                    className="text-xs text-muted hover:text-status-missing din uppercase tracking-wide whitespace-nowrap"
+                  >
+                    remove
+                  </button>
+                </form>
               </div>
             ))}
           </div>
@@ -104,7 +126,7 @@ export default async function ConditionsStep() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-muted mb-1" htmlFor="onset_date">
-                When did it start? (best guess is fine)
+                When did it start?
               </label>
               <input
                 id="onset_date"
@@ -112,6 +134,7 @@ export default async function ConditionsStep() {
                 type="date"
                 className="w-full border border-hairline px-3 py-2 text-sm bg-white"
               />
+              <p className="text-xs text-muted mt-1">Best guess is fine.</p>
             </div>
             <div>
               <label className="block text-sm text-muted mb-1">

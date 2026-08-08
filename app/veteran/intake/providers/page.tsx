@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import IntakeProgress from "@/components/IntakeProgress";
 
 async function saveProvider(formData: FormData) {
   "use server";
@@ -29,6 +30,16 @@ async function saveProvider(formData: FormData) {
   redirect("/veteran/intake/providers");
 }
 
+async function deleteProvider(formData: FormData) {
+  "use server";
+  const supabase = createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) redirect("/sign-in");
+
+  await supabase.from("providers").delete().eq("id", formData.get("id") as string);
+  redirect("/veteran/intake/providers");
+}
+
 export default async function ProvidersStep() {
   const supabase = createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -52,7 +63,7 @@ export default async function ProvidersStep() {
   return (
     <main className="min-h-screen bg-paper px-6 py-10">
       <div className="max-w-lg mx-auto">
-        <p className="text-xs text-muted mb-1 din uppercase tracking-wide">step 6 of 6</p>
+        <IntakeProgress step={6} />
         <h1 className="din text-3xl mb-2">Medical providers</h1>
         <p className="text-muted text-sm mb-6">
           Add anywhere you've gotten treatment &mdash; VA or private. This
@@ -62,13 +73,24 @@ export default async function ProvidersStep() {
         {providers && providers.length > 0 && (
           <div className="border border-hairline divide-y divide-hairline mb-6">
             {providers.map((p) => (
-              <div key={p.id} className="px-4 py-3 text-sm">
-                <p className="din uppercase tracking-wide text-xs text-accent mb-1">
-                  {p.provider_name}
-                </p>
-                <p className="text-muted text-xs">
-                  {[p.provider_type, p.location].filter(Boolean).join(" \u2022 ")}
-                </p>
+              <div key={p.id} className="px-4 py-3 text-sm flex items-center justify-between gap-3">
+                <div>
+                  <p className="din uppercase tracking-wide text-xs text-accent mb-1">
+                    {p.provider_name}
+                  </p>
+                  <p className="text-muted text-xs">
+                    {[p.provider_type, p.location].filter(Boolean).join(" \u2022 ")}
+                  </p>
+                </div>
+                <form action={deleteProvider}>
+                  <input type="hidden" name="id" value={p.id} />
+                  <button
+                    type="submit"
+                    className="text-xs text-muted hover:text-status-missing din uppercase tracking-wide whitespace-nowrap"
+                  >
+                    remove
+                  </button>
+                </form>
               </div>
             ))}
           </div>
